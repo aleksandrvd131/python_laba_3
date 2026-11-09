@@ -1,7 +1,7 @@
 # Лабораторная работа №3. Каталог объектов
 
 **Тема варианта:** Библиотечные книги (`Book`, `BookCatalog`).  
-**Инструментарий:** Python 3.14+, `uv`, `pytest`.
+**Инструментарий:** Python 3.14+, `uv`, `pytest`, `ruff`.
 
 ---
 
@@ -17,6 +17,7 @@
 - Использование `typing.Self`, `collections.abc.Iterator`, `collections.abc.Iterable`.
 - `@dataclass(frozen=True, slots=True)` для оптимизации памяти и гарантии неизменяемости.
 - Регистронезависимый поиск через `.casefold()` для корректной поддержки Unicode (кириллицы и спецсимволов).
+- Файлы `__init__.py` оставлены пустыми (явный импорт из подмодулей: `book_catalog.models`, `book_catalog.catalog`, `book_catalog.exceptions`).
 
 ---
 
@@ -24,19 +25,20 @@
 
 ```plaintext
 python_laba_3/
-├── pyproject.toml              # Конфигурация проекта (hatchling, pytest, dev-зависимости)
+├── pyproject.toml              # Конфигурация проекта (hatchling, pytest, ruff, dev-зависимости)
+├── uv.lock                     # Зафиксированные версии зависимостей
 ├── README.md                   # Документация лабораторной работы
 ├── .gitignore                  # Исключения Git
 ├── src/
 │   └── book_catalog/
-│       ├── __init__.py         # Экспорт публичного интерфейса
+│       ├── __init__.py         # Пустой файл пакета
 │       ├── __main__.py         # CLI-демонстрация возможностей
 │       ├── exceptions.py       # Иерархия доменных исключений
 │       ├── models.py           # Сущность Book с валидацией инвариантов
 │       ├── catalog.py          # BookCatalog, ReadOnlyCatalogView, транзакции
 │       └── migration.py        # Миграция схемы JSON v1 -> v2
 └── tests/
-    ├── __init__.py
+    ├── __init__.py             # Пустой файл тестового пакета
     ├── conftest.py             # Общие фикстуры pytest
     ├── test_models.py          # Тесты сущности Book и инвариантов
     ├── test_catalog.py         # Тесты CRUD, поиска и детерминированной итерации
@@ -84,37 +86,29 @@ python_laba_3/
 
 ---
 
-## 4. Дополнительные задания (Бонусы)
-
-1. **Согласованный неуникальный индекс по категории (+3 балла):**  
-   Реализован через `defaultdict(set)`. Индекс синхронно обновляется при вызовах `add()`, `remove()`, `load_from_json()` и `undo()`, ускоряя поиск книг конкретной категории до $O(K \log K)$ без полного перебора $O(N)$.
-2. **Undo последней операции (+3 балла):**  
-   Метод `catalog.undo()` откатывает последнюю мутирующую операцию благодаря стеку легковесных снимков ссылок на неизменяемые объекты `Book`.
-3. **Read-only view каталога (+2 балла):**  
-   Свойство `catalog.read_only` возвращает экземпляр `ReadOnlyCatalogView`, который делегирует методы чтения (`get`, `find_by_category`, `find_by_name`, `__len__`, `__iter__`, `__contains__`) и полностью скрывает методы модификации.
-4. **Миграция формата хранилища версии 1 в версию 2 (+2 балла):**  
-   Функция `migrate_file()` в модуле `migration.py` трансформирует файл схемы v1 в схему v2 с добавлением метаданных (`"language": "ru"`) и обновлением `format_version: 2`.
-5. **Транзакционный Context Manager с Rollback (+5 баллов Challenge):**  
-   Конструкция `with catalog.transaction():` фиксирует изменения только при успешном завершении блока. В случае любого исключения внутри блока всё состояние каталога атомарно откатывается к моменту старта транзакции.
-
----
-
 ## 5. Установка и запуск
 
 Проект управляется через менеджер пакетов `uv`.
 
 ### 1. Запуск тестов через `uv`
 ```bash
-cd Project/laba/python_laba_3
 uv run pytest -v
 ```
 
-### 2. Запуск демонстрации через `uv`
+### 2. Проверка кода через `ruff`
 ```bash
-uv run python -m book_catalog
+# Проверка линтером:
+uv run ruff check
+
+# Проверка форматирования:
+uv run ruff format --check
+
+# Автоматическое исправление замечаний и форматирование:
+uv run ruff check --fix
+uv run ruff format
 ```
 
-Или через классический Python 3.14 (без uv):
+### 3. Запуск CLI-демонстрации через `uv`
 ```bash
-python3 -m book_catalog
+uv run python -m book_catalog
 ```

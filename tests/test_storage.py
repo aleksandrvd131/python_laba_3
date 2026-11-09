@@ -1,13 +1,16 @@
+
 import json
 from pathlib import Path
+
 import pytest
-from book_catalog import (
-    Book,
-    BookCatalog,
+
+from book_catalog.catalog import BookCatalog
+from book_catalog.exceptions import (
     CorruptedStorageError,
     DuplicateIdError,
     UnsupportedVersionError,
 )
+from book_catalog.models import Book
 
 
 def test_json_round_trip(tmp_path: Path, filled_catalog: BookCatalog) -> None:
@@ -67,7 +70,7 @@ def test_invalid_root_structure(tmp_path: Path) -> None:
 def test_atomic_load_on_invalid_book(tmp_path: Path, filled_catalog: BookCatalog) -> None:
     """
     Каталог содержит 4 книги. В файле первая книга валидная, а вторая содержит pages=-10.
-    После ошибки загрузки каталог обязан сохранить исходные 4 книги без частичного добавления
+    После ошибки загрузки каталог обязан сохранить исходные 4 книги без частичного добавления.
     """
     broken_file = tmp_path / "broken_item.json"
     broken_payload = {

@@ -9,6 +9,7 @@ dependencies = []
 [dependency-groups]
 dev = [
     "pytest>=8.3.0",
+    "ruff>=0.17.4",
 ]
 
 [build-system]
@@ -18,3 +19,18 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+]

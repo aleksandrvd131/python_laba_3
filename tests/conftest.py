@@ -1,7 +1,7 @@
-
-
 import pytest
-from book_catalog import Book, BookCatalog
+
+from book_catalog.catalog import BookCatalog
+from book_catalog.models import Book
 
 
 @pytest.fixture
@@ -45,5 +45,4 @@ def sample_books() -> list[Book]:
 
 @pytest.fixture
 def filled_catalog(sample_books: list[Book]) -> BookCatalog:
-    """Каталог, предзаполненный тестовыми книгами"""
     return BookCatalog(sample_books)

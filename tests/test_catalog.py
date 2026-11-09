@@ -1,11 +1,13 @@
+
 import pytest
-from book_catalog import (
-    Book,
-    BookCatalog,
+
+from book_catalog.catalog import BookCatalog
+from book_catalog.exceptions import (
     DuplicateIdError,
     InvalidEntityError,
     ItemNotFoundError,
 )
+from book_catalog.models import Book
 
 
 def test_add_get_remove_lifecycle(sample_books: list[Book]) -> None:
@@ -94,7 +96,10 @@ def test_search_methods_immutability(filled_catalog: BookCatalog) -> None:
 
 
 def test_deterministic_iteration_order(sample_books: list[Book]) -> None:
-
+    """
+    Элементы в sample_books расположены в порядке: B-002, B-001, B-003, B-004.
+    Итерация должна возвращать их строго по возрастанию: B-001, B-002, B-003, B-004.
+    """
     catalog = BookCatalog()
     for book in sample_books:
         catalog.add(book)

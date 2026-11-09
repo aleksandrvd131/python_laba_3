@@ -17,10 +17,9 @@ from .models import Book, BookId, Category
 
 
 class ReadOnlyCatalogView:
-
     __slots__ = ("_catalog",)
 
-    def __init__(self, catalog: "BookCatalog") -> None:
+    def __init__(self, catalog: BookCatalog) -> None:
         self._catalog = catalog
 
     def get(self, item_id: BookId) -> Book:
@@ -43,8 +42,6 @@ class ReadOnlyCatalogView:
 
 
 class BookCatalog:
-
-
     FORMAT_VERSION = 1
 
     def __init__(self, items: Iterable[Book] = ()) -> None:
@@ -121,8 +118,8 @@ class BookCatalog:
         return ReadOnlyCatalogView(self)
 
     @contextmanager
-    def transaction(self) -> Iterator["BookCatalog"]:
-        """Транзакционный контекстный менеджер с откатом при ошибке        """
+    def transaction(self) -> Iterator[BookCatalog]:
+        """Транзакционный контекстный менеджер с откатом при ошибке"""
         snapshot = self._items.copy()
         stack_depth = len(self._undo_stack)
         try:
@@ -171,15 +168,15 @@ class BookCatalog:
             case {"format_version": version, "items": list(raw_items)} if type(version) is int:
                 if version != self.FORMAT_VERSION:
                     raise UnsupportedVersionError(
-                        f"Неподдерживаемая версия формата: {version} (ожидалась {self.FORMAT_VERSION})."
+                        f"Неподдерживаемая версия: {version} (ожидалась {self.FORMAT_VERSION})"
                     )
             case {"format_version": _}:
                 raise CorruptedStorageError(
-                    "Некорректный тип поля 'format_version' или отсутствует список 'items'."
+                    "Некорректный тип поля 'format_version' или отсутствует список 'items'"
                 )
             case _:
                 raise CorruptedStorageError(
-                    "Корень JSON-документа должен содержать поля 'format_version' и 'items'."
+                    "Корень JSON-документа должен содержать поля 'format_version' и 'items'"
                 )
 
         staged_items: dict[BookId, Book] = {}
@@ -188,14 +185,14 @@ class BookCatalog:
                 book = Book.from_dict(raw_entry)
             except InvalidEntityError as exc:
                 err = CorruptedStorageError(
-                    f"Повреждённая запись книги с индексом {index} в файле '{path}'."
+                    f"Повреждённая запись книги с индексом {index} в файле {path}"
                 )
                 err.add_note(f"Детали ошибки валидации: {exc}")
                 raise err from exc
 
             if book.id in staged_items:
                 raise DuplicateIdError(
-                    f"Дубликат ID '{book.id}' обнаружен внутри загружаемого файла."
+                    f"Дубликат ID '{book.id}' обнаружен внутри загружаемого файла"
                 )
             staged_items[book.id] = book
 

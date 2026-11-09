@@ -1,9 +1,8 @@
 
-import sys
 from pathlib import Path
 
 from .catalog import BookCatalog
-from .exceptions import DuplicateIdError, InvalidEntityError, ItemNotFoundError
+from .exceptions import DuplicateIdError
 from .models import Book
 
 
@@ -15,9 +14,18 @@ def main() -> None:
     catalog = BookCatalog()
 
     sample_books = [
-        Book("B-03", "Мастер и Маргарита", "Художественная литература", 1967, "Михаил Булгаков", 480),
+        Book(
+            "B-03", "Мастер и Маргарита", "Художественная литература", 1967, "Михаил Булгаков", 480
+        ),
         Book("B-01", "Чистый код", "Программирование", 2019, "Роберт Мартин", 464),
-        Book("B-02", "Алгоритмы. Построение и анализ", "Программирование", 2022, "Томас Кормен", 1328),
+        Book(
+            "B-02",
+            "Алгоритмы. Построение и анализ",
+            "Программирование",
+            2022,
+            "Томас Кормен",
+            1328,
+        ),
         Book("B-04", "Пикник на обочине", "Фантастика", 1972, "Аркадий и Борис Стругацкие", 256),
     ]
 
@@ -45,18 +53,20 @@ def main() -> None:
     catalog.add(b_temp)
     print(f"  Добавили {b_temp.id}. Размер каталога: {len(catalog)}")
     catalog.undo()
-    print(f"  Выполнили catalog.undo(). Размер каталога: {len(catalog)}, 'B-99' in catalog: {'B-99' in catalog}")
+    print(f"  Выполнили undo(). Размер: {len(catalog)}, 'B-99' in catalog: {'B-99' in catalog}")
 
     print("[6] Демонстрация транзакций (+5 баллов Challenge):")
     try:
         with catalog.transaction():
             catalog.add(Book("B-10", "Книга в транзакции", "Наука", 2023, "Автор 1", 200))
-            print("  Внутри транзакции добавили B-10. Вызываем намеренную ошибку дубликата...")
+            print("  Внутри транзакции добавили B-10. Вызываем ошибку дубликата...")
             catalog.add(Book("B-01", "Дубликат B-01", "Наука", 2023, "Автор 2", 200))
     except DuplicateIdError:
         print("  Поймана DuplicateIdError! Транзакция откатила состояние.")
 
-    print(f"  Размер каталога после отката транзакции: {len(catalog)} ('B-10' in catalog: {'B-10' in catalog})")
+    print(
+        f"  Размер каталога после отката: {len(catalog)} ('B-10' in catalog: {'B-10' in catalog})"
+    )
 
     demo_path = Path("/tmp/demo_catalog.json")
     print(f"\n[7] Сохранение каталога в JSON: {demo_path}")

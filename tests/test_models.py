@@ -1,6 +1,19 @@
+
 from dataclasses import FrozenInstanceError
+
 import pytest
-from book_catalog import Book, InvalidEntityError
+
+from book_catalog.exceptions import InvalidEntityError
+from book_catalog.models import Book
+
+VALID_BOOK_DATA = {
+    "id": "B-1",
+    "name": "Книга",
+    "category": "Жанр",
+    "year": 2020,
+    "author": "Автор",
+    "pages": 100,
+}
 
 
 def test_create_valid_book() -> None:
@@ -21,28 +34,29 @@ def test_create_valid_book() -> None:
 
 
 @pytest.mark.parametrize(
-    ("field_desc", "kwargs"),
+    ("field_desc", "overrides"),
     [
-        ("Пустой id", {"id": "", "name": "Книга", "category": "Жанр", "year": 2020, "author": "Автор", "pages": 100}),
-        ("Пробельный id", {"id": "   ", "name": "Книга", "category": "Жанр", "year": 2020, "author": "Автор", "pages": 100}),
-        ("Нестроковый id", {"id": 123, "name": "Книга", "category": "Жанр", "year": 2020, "author": "Автор", "pages": 100}),
-        ("Пустое название", {"id": "B-1", "name": "", "category": "Жанр", "year": 2020, "author": "Автор", "pages": 100}),
-        ("Пробельное название", {"id": "B-1", "name": " \t ", "category": "Жанр", "year": 2020, "author": "Автор", "pages": 100}),
-        ("Пустая категория", {"id": "B-1", "name": "Книга", "category": "", "year": 2020, "author": "Автор", "pages": 100}),
-        ("Пустой автор", {"id": "B-1", "name": "Книга", "category": "Жанр", "year": 2020, "author": "  ", "pages": 100}),
-        ("Слишком ранний год", {"id": "B-1", "name": "Книга", "category": "Жанр", "year": 1200, "author": "Автор", "pages": 100}),
-        ("Год из далекого будущего", {"id": "B-1", "name": "Книга", "category": "Жанр", "year": 3000, "author": "Автор", "pages": 100}),
-        ("Год как bool True", {"id": "B-1", "name": "Книга", "category": "Жанр", "year": True, "author": "Автор", "pages": 100}),
-        ("Год как строка", {"id": "B-1", "name": "Книга", "category": "Жанр", "year": "2020", "author": "Автор", "pages": 100}),
-        ("Нулевые страницы", {"id": "B-1", "name": "Книга", "category": "Жанр", "year": 2020, "author": "Автор", "pages": 0}),
-        ("Отрицательные страницы", {"id": "B-1", "name": "Книга", "category": "Жанр", "year": 2020, "author": "Автор", "pages": -50}),
-        ("Страницы как float", {"id": "B-1", "name": "Книга", "category": "Жанр", "year": 2020, "author": "Автор", "pages": 120.5}),
-        ("Страницы как bool True", {"id": "B-1", "name": "Книга", "category": "Жанр", "year": 2020, "author": "Автор", "pages": True}),
+        ("Пустой id", {"id": ""}),
+        ("Пробельный id", {"id": "   "}),
+        ("Нестроковый id", {"id": 123}),
+        ("Пустое название", {"name": ""}),
+        ("Пробельное название", {"name": " \t "}),
+        ("Пустая категория", {"category": ""}),
+        ("Пустой автор", {"author": "  "}),
+        ("Слишком ранний год", {"year": 1200}),
+        ("Год из далекого будущего", {"year": 3000}),
+        ("Год как bool True", {"year": True}),
+        ("Год как строка", {"year": "2020"}),
+        ("Нулевые страницы", {"pages": 0}),
+        ("Отрицательные страницы", {"pages": -50}),
+        ("Страницы как float", {"pages": 120.5}),
+        ("Страницы как bool True", {"pages": True}),
     ],
 )
-def test_create_invalid_book_raises(field_desc: str, kwargs: dict) -> None:
+def test_create_invalid_book_raises(field_desc: str, overrides: dict) -> None:
+    data = {**VALID_BOOK_DATA, **overrides}
     with pytest.raises(InvalidEntityError):
-        Book(**kwargs)
+        Book(**data)
 
 
 def test_book_immutability() -> None:
@@ -90,12 +104,14 @@ def test_from_dict_invalid_data() -> None:
 
     with pytest.raises(InvalidEntityError):
         # Лишнее поле
-        Book.from_dict({
-            "id": "B-1",
-            "name": "Книга",
-            "category": "Жанр",
-            "year": 2020,
-            "author": "Автор",
-            "pages": 100,
-            "extra": "значение",
-        })
+        Book.from_dict(
+            {
+                "id": "B-1",
+                "name": "Книга",
+                "category": "Жанр",
+                "year": 2020,
+                "author": "Автор",
+                "pages": 100,
+                "extra": "значение",
+            }
+        )

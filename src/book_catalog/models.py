@@ -31,9 +31,7 @@ class Book:
         }
         for field_name, value in text_fields.items():
             if not isinstance(value, str) or not value.strip():
-                raise InvalidEntityError(
-                    f"Поле '{field_name}' должно быть непустой строкой"
-                )
+                raise InvalidEntityError(f"Поле '{field_name}' должно быть непустой строкой")
 
         max_year = date.today().year + 1
         if not _is_real_int(self.year) or not (1450 <= self.year <= max_year):
@@ -42,9 +40,7 @@ class Book:
             )
 
         if not _is_real_int(self.pages) or self.pages <= 0:
-            raise InvalidEntityError(
-                "Количество страниц должно быть положительным целым числом"
-            )
+            raise InvalidEntityError("Количество страниц должно быть положительным целым числом")
 
     def to_dict(self) -> dict[str, Any]:
         """Преобразует сущность в словарь для сериализации"""

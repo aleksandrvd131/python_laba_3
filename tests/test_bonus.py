@@ -1,19 +1,19 @@
 from pathlib import Path
+
 import pytest
-from book_catalog import (
-    Book,
-    BookCatalog,
+
+from book_catalog.catalog import BookCatalog, ReadOnlyCatalogView
+from book_catalog.exceptions import (
     CatalogError,
     DuplicateIdError,
-    ReadOnlyCatalogView,
     UnsupportedVersionError,
-    migrate_file,
-    migrate_v1_to_v2_payload,
 )
+from book_catalog.migration import migrate_file, migrate_v1_to_v2_payload
+from book_catalog.models import Book
 
 
 def test_bonus_category_index_consistency(sample_books: list[Book]) -> None:
-    """Проверка актуальности индекса категорий при добавлении, удалении и перезаписи"""
+    """Проверка актуальности индекса категорий при добавлении удалении и перезаписи"""
     catalog = BookCatalog()
     catalog.add(sample_books[0])  # B-002: Программирование
     catalog.add(sample_books[1])  # B-001: Программирование
@@ -31,7 +31,7 @@ def test_bonus_category_index_consistency(sample_books: list[Book]) -> None:
 
 
 def test_bonus_undo(sample_books: list[Book]) -> None:
-    """Проверка механизма отката операций undo()"""
+    """Проверка механизма отката операций undo()."""
     catalog = BookCatalog()
 
     # Попытка вызвать undo при пустом стеке
@@ -55,7 +55,7 @@ def test_bonus_undo(sample_books: list[Book]) -> None:
 
 
 def test_bonus_read_only_view(filled_catalog: BookCatalog) -> None:
-    """Проверка ReadOnlyCatalogView"""
+    """Проверка ReadOnlyCatalogView (+2 балла)."""
     view = filled_catalog.read_only
     assert isinstance(view, ReadOnlyCatalogView)
 
@@ -80,8 +80,7 @@ def test_bonus_read_only_view(filled_catalog: BookCatalog) -> None:
 
 
 def test_bonus_transaction_commit_and_rollback(filled_catalog: BookCatalog) -> None:
-    """Проверка транзакций с автоматическим rollback при исключении"""
-    initial_books = list(filled_catalog)
+    """Проверка транзакций с автоматическим rollback"""
     new_b1 = Book("B-101", "Книга 1", "Жанр", 2020, "Автор", 100)
     new_b2 = Book("B-102", "Книга 2", "Жанр", 2020, "Автор", 100)
 
@@ -95,11 +94,10 @@ def test_bonus_transaction_commit_and_rollback(filled_catalog: BookCatalog) -> N
     assert len(filled_catalog) == 6
 
     # Транзакция с ошибкой (дубликат ID) -> rollback
-    with pytest.raises(DuplicateIdError):
-        with filled_catalog.transaction():
-            filled_catalog.add(Book("B-103", "Книга 3", "Жанр", 2020, "Автор", 100))
-            # Вызываем ошибку
-            filled_catalog.add(new_b1)
+    with pytest.raises(DuplicateIdError), filled_catalog.transaction():
+        filled_catalog.add(Book("B-103", "Книга 3", "Жанр", 2020, "Автор", 100))
+        # Вызываем ошибку
+        filled_catalog.add(new_b1)
 
     # B-103 не должна остаться в каталоге после отката
     assert "B-103" not in filled_catalog
@@ -107,7 +105,7 @@ def test_bonus_transaction_commit_and_rollback(filled_catalog: BookCatalog) -> N
 
 
 def test_bonus_migration_v1_to_v2(tmp_path: Path, filled_catalog: BookCatalog) -> None:
-    """Проверка миграции формата хранилища из версии 1 в версию 2 """
+    """Проверка миграции формата хранилища из версии 1 в версию 2"""
     v1_file = tmp_path / "catalog_v1.json"
     v2_file = tmp_path / "catalog_v2.json"
     filled_catalog.save_to_json(v1_file)
@@ -115,6 +113,7 @@ def test_bonus_migration_v1_to_v2(tmp_path: Path, filled_catalog: BookCatalog) -
     migrate_file(v1_file, v2_file)
 
     import json
+
     v2_data = json.loads(v2_file.read_text(encoding="utf-8"))
     assert v2_data["format_version"] == 2
     assert len(v2_data["items"]) == 4
