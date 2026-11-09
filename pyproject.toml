@@ -1,0 +1,20 @@
+[project]
+name = "book-catalog"
+version = "0.2.0"
+description = "Лабораторная работа 3: Предметная модель и каталог библиотечных книг"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
